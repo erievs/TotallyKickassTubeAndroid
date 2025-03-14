@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+<resources>
+    <declare-styleable name="TKATubeTheme">
+        <attr name="divider_light" format="color"/>
+        <attr name="divider_dark" format="color"/>
+    </declare-styleable>
+</resources>
