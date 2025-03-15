@@ -16,7 +16,7 @@
             android:id="@+id/superTopGrayBar"
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#F1F1F1"
+            android:background="?attr/colorBackgroundFloating"
             app:layout_constraintTop_toTopOf="@id/videoTitle"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
@@ -25,15 +25,17 @@
             android:id="@+id/videoTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Video Title"
-            android:textSize="16sp"
-            android:textColor="@color/divider_light"
+            android:text=""
+            android:textSize="14sp"
+            android:textColor="?attr/colorOnSurface"
             android:textStyle="bold"
             android:gravity="start"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
             android:paddingTop="8dp"
             android:paddingBottom="4dp"
+            android:ellipsize="end"
+            android:maxLines="2"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
@@ -42,7 +44,7 @@
             android:id="@+id/topGrayBar"
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#F1F1F1"
+            android:background="?attr/colorBackgroundFloating"
             app:layout_constraintTop_toBottomOf="@id/videoTitle"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
@@ -56,14 +58,14 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:use_controller="true"
-            app:resize_mode="fill"
-            android:elevation="4dp" />
+            app:resize_mode="zoom"
+            android:elevation="6dp" />
 
         <View
             android:id="@+id/middleGrayBar"
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#F1F1F1"
+            android:background="?attr/colorBackgroundFloating"
             app:layout_constraintTop_toBottomOf="@id/playerView"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
@@ -90,7 +92,7 @@
         android:layout_width="250dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:background="@android:color/white"
+        android:background="?attr/colorBackgroundFloating"
         android:padding="16dp"
         android:scrollbars="vertical" />
 

@@ -50,7 +50,7 @@ dependencies {
 
     // ExoPlayer for HLS streaming
     implementation("com.google.android.exoplayer:exoplayer:2.19.1")
-
+    implementation ("com.github.norulab:android-exoplayer-fullscreen:1.2.1")
     // YouTubeDL-Android library for extracting HLS streams from YouTube
     implementation("io.github.junkfood02.youtubedl-android:library:0.17.2")
     implementation("io.github.junkfood02.youtubedl-android:ffmpeg:0.17.2")

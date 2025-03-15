@@ -40,21 +40,25 @@ public class RelatedVideosAdapter extends RecyclerView.Adapter<RelatedVideosAdap
 
         holder.videoTitle.setText(videoTitle);
 
-        // Load the thumbnail using Picasso
         Picasso.get().load(thumbnailUrl).into(holder.thumbnailImage);
 
-        // Extract video ID from the video URL
         String videoId = extractVideoIdFromThumbnailUrl(thumbnailUrl);
 
-        // Set up the click listener for each item
-        holder.itemView.setOnClickListener(v -> {
-            if (onItemClickListener != null && videoId != null) {
-                String videoUrl = "http://youtu.be/" + videoId; // Construct the video URL
-                onItemClickListener.onItemClick(relatedVideo); // Pass the related video
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            private boolean isClicked = false;
+
+            @Override
+            public void onClick(View v) {
+                if (!isClicked && onItemClickListener != null && videoId != null) {
+                    isClicked = true;
+                    String videoUrl = "http://youtu.be/" + videoId;
+                    onItemClickListener.onItemClick(relatedVideo);
+
+                    holder.itemView.postDelayed(() -> isClicked = false, 5000);
+                }
             }
         });
     }
-
     private String extractVideoIdFromThumbnailUrl(String thumbnailUrl) {
         String videoId = null;
         if (thumbnailUrl != null && thumbnailUrl.contains("/vi/")) {
@@ -71,8 +75,6 @@ public class RelatedVideosAdapter extends RecyclerView.Adapter<RelatedVideosAdap
     public int getItemCount() {
         return relatedVideos != null ? relatedVideos.size() : 0;
     }
-
-    // ViewHolder class for related video items
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView videoTitle;
         ImageView thumbnailImage;
@@ -84,13 +86,10 @@ public class RelatedVideosAdapter extends RecyclerView.Adapter<RelatedVideosAdap
         }
     }
 
-    // Method to update the list of videos
     public void updateVideos(List<YouTubeResponse.ContentItem> relatedVideos) {
         this.relatedVideos = relatedVideos;
         notifyDataSetChanged();
     }
-
-    // Define the click listener interface
     public interface OnItemClickListener {
         void onItemClick(YouTubeResponse.ContentItem relatedVideo);
     }

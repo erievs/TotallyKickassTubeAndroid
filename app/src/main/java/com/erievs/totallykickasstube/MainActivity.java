@@ -15,10 +15,10 @@ import com.yausername.aria2c.Aria2c;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class MainActivity extends AppCompatActivity {
+public class    MainActivity extends AppCompatActivity {
 
     private SearchView searchView;
-    private final ExecutorService executorService = Executors.newSingleThreadExecutor(); // Background thread
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

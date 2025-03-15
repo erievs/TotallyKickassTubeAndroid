@@ -17,7 +17,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         android:padding="8dp"
-        android:background="@color/cardview_dark_background"
+        android:background="?attr/colorBackgroundFloating"
         android:elevation="8dp" />
 
     <!-- Search Results RecyclerView -->

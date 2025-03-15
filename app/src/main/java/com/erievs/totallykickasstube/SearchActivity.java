@@ -18,7 +18,7 @@ public class SearchActivity extends AppCompatActivity {
     private static final String TAG = "SearchActivity";
     private SearchView searchView;
     private RecyclerView recyclerView;
-    private VideoAdapter videoAdapter;
+    private SearchVideoAdapter videoAdapter;
     private List<YouTubeResponse.ContentItem> videoList;
 
     @Override
@@ -32,9 +32,13 @@ public class SearchActivity extends AppCompatActivity {
 
         videoList = new ArrayList<>();
 
-        videoAdapter = new VideoAdapter(videoList, contentItem -> {
-
+        videoAdapter = new SearchVideoAdapter(videoList, new SearchVideoAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(String videoUrl) {
+                navigateToVideoPlayerActivity(videoUrl);
+            }
         });
+
 
         recyclerView.setAdapter(videoAdapter);
 
@@ -43,7 +47,11 @@ public class SearchActivity extends AppCompatActivity {
 
         String searchQuery = getIntent().getStringExtra("SEARCH_QUERY");
         Log.d(TAG, "Received search query: " + searchQuery);
-        searchView.setQuery(searchQuery, false);
+
+        if (searchQuery != null && !searchQuery.isEmpty()) {
+            searchView.setQuery(searchQuery, false);
+            fetchSearchResults(searchQuery);
+        }
 
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
@@ -75,11 +83,12 @@ public class SearchActivity extends AppCompatActivity {
         videoAdapter.updateVideos(filteredList);
 
         if (filteredList.isEmpty()) {
-            Toast.makeText(SearchActivity.this, "No results found", Toast.LENGTH_SHORT).show();
+            Log.d(TAG,"No may have been results found, or it is just waiting.");
         }
     }
 
     private void fetchSearchResults(String query) {
+
         if (query == null || query.trim().isEmpty()) {
             Toast.makeText(this, "Please enter a search query", Toast.LENGTH_SHORT).show();
             return;

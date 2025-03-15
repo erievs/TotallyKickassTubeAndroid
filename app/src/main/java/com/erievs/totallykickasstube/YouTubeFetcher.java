@@ -1,5 +1,6 @@
 package com.erievs.totallykickasstube;
 
+import android.os.AsyncTask;
 import android.util.Log;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -49,23 +50,32 @@ public class YouTubeFetcher {
         void onTitleFetched(String title);
     }
     public void fetchVideoTitle(String videoUrl, FetchVideoTitleCallback callback) {
-        try {
 
-            VideoInfo streamInfo = YoutubeDL.getInstance().getInfo(videoUrl);
+        new AsyncTask<String, Void, String>() {
 
-            String title = streamInfo.getTitle();
+            @Override
+            protected String doInBackground(String... params) {
+                String videoTitle = null;
+                try {
+                    VideoInfo streamInfo = YoutubeDL.getInstance().getInfo(params[0]);
+                    videoTitle = streamInfo.getTitle();
+                } catch (YoutubeDLException e) {
+                    Log.e("VideoFetcher", "Error fetching video info: " + e.getMessage());
+                } catch (YoutubeDL.CanceledException | InterruptedException e) {
+                    Log.e("VideoFetcher", "Video fetching canceled or interrupted: " + e.getMessage());
 
-            callback.onTitleFetched(title);
+                }
+                return videoTitle;
+            }
 
-        } catch (YoutubeDLException e) {
+            @Override
+            protected void onPostExecute(String title) {
 
-            e.printStackTrace();
-            callback.onTitleFetched(null);
-        } catch (YoutubeDL.CanceledException e) {
-            throw new RuntimeException(e);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+                if (callback != null) {
+                    callback.onTitleFetched(title);
+                }
+            }
+        }.execute(videoUrl);
     }
     public interface FetchRelatedVideosCallback {
         void onRelatedVideosFetched(List<YouTubeResponse.ContentItem> relatedVideos);
@@ -89,25 +99,22 @@ public class YouTubeFetcher {
         Log.d(TAG, "Fetching search results for query: " + query);
 
         JsonNode postData = createPostDataSearch(query);
-        Log.d(TAG, "Post data for search request: " + postData.toString()); // Log the created post data
+        Log.d(TAG, "Post data for search request: " + postData.toString());
 
         RequestBody requestBody = RequestBody.create(
                 MediaType.parse("application/json"), postData.toString()
         );
 
-        // Log the type of API request being sent
         Log.d(TAG, "Sending API request with POST data: " + postData.toString());
 
         apiService.getSearchResults(API_KEY, requestBody).enqueue(new Callback<JsonNode>() {
             @Override
             public void onResponse(Call<JsonNode> call, Response<JsonNode> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    // Log the response body
                     Log.d(TAG, "Response received: " + response.body().toString());
 
                     List<YouTubeResponse.ContentItem> searchResults = extractSearchResults(response.body());
 
-                    // Log the search results extracted
                     Log.d(TAG, "Extracted search results: " + searchResults.size() + " items found.");
 
                     if (searchResults != null && !searchResults.isEmpty()) {
@@ -236,8 +243,6 @@ public class YouTubeFetcher {
 
         return searchResults;
     }
-
-
     public void fetchRelatedVideos(String videoId) {
         Log.d(TAG, "Fetching related videos for videoId: " + videoId);
 

@@ -1,5 +1,6 @@
 package com.erievs.totallykickasstube;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,14 +12,15 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.squareup.picasso.Picasso;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> {
+public class SearchVideoAdapter extends RecyclerView.Adapter<SearchVideoAdapter.ViewHolder> {
 
     private List<YouTubeResponse.ContentItem> videoList;
     private OnItemClickListener onItemClickListener;
 
-    public VideoAdapter(List<YouTubeResponse.ContentItem> videoList, OnItemClickListener onItemClickListener) {
+    public SearchVideoAdapter(List<YouTubeResponse.ContentItem> videoList, OnItemClickListener onItemClickListener) {
         this.videoList = videoList;
         this.onItemClickListener = onItemClickListener;
     }
@@ -49,20 +51,25 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
 
         if (thumbnailUrl != null) {
             Picasso.get().load(thumbnailUrl).into(holder.thumbnailImage);
-        } else {
-
         }
 
         String videoId = extractVideoIdFromThumbnailUrl(thumbnailUrl);
 
-        holder.itemView.setOnClickListener(v -> {
-            if (onItemClickListener != null && videoId != null) {
-                String videoUrl = "http://youtu.be/" + videoId;
-                onItemClickListener.onItemClick(videoUrl);
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            private boolean isClicked = false;
+
+            @Override
+            public void onClick(View v) {
+                if (!isClicked && onItemClickListener != null && videoId != null) {
+                    isClicked = true;
+                    String videoUrl = "http://youtu.be/" + videoId;
+                    onItemClickListener.onItemClick(videoUrl);
+
+                    holder.itemView.postDelayed(() -> isClicked = false, 5000);
+                }
             }
         });
     }
-
     private String extractVideoIdFromThumbnailUrl(String thumbnailUrl) {
         String videoId = null;
         if (thumbnailUrl != null && thumbnailUrl.contains("/vi/")) {
@@ -92,9 +99,11 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
     }
 
     public void updateVideos(List<YouTubeResponse.ContentItem> videoList) {
-        this.videoList = videoList;
+        Log.d("VideoAdapter", "Updating videos: " + videoList.size());
+        this.videoList = new ArrayList<>(videoList);
         notifyDataSetChanged();
     }
+
 
     public interface OnItemClickListener {
         void onItemClick(String videoUrl);
