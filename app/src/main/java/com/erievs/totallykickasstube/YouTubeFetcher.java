@@ -32,7 +32,6 @@ public class YouTubeFetcher {
     private YouTubeApiService apiService;
     private FetchRelatedVideosCallback callback;
     private ObjectMapper objectMapper;
-
     public YouTubeFetcher(FetchRelatedVideosCallback callback) {
 
         objectMapper = new ObjectMapper();
@@ -45,7 +44,6 @@ public class YouTubeFetcher {
         apiService = retrofit.create(YouTubeApiService.class);
         this.callback = callback;
     }
-
     public interface FetchVideoTitleCallback {
         void onTitleFetched(String title);
     }
@@ -77,10 +75,6 @@ public class YouTubeFetcher {
             }
         }.execute(videoUrl);
     }
-    public interface FetchRelatedVideosCallback {
-        void onRelatedVideosFetched(List<YouTubeResponse.ContentItem> relatedVideos);
-        void onFetchFailed(String errorMessage);
-    }
     public interface YouTubeApiService {
         @Headers({
                 "Content-Type: application/json",
@@ -93,8 +87,182 @@ public class YouTubeFetcher {
         @POST("search")
         Call<JsonNode> getSearchResults(@Query("key") String apiKey, @Body RequestBody body);
 
-    }
+        @POST("browse")
+        Call<JsonNode> getBrowseVideos(@Query("key") String apiKey, @Body RequestBody body);
 
+    }
+    public void fetchBrowseVideos(String browseId) {
+        Log.d(TAG, "Fetching browse results for browseId: " + browseId);
+
+        JsonNode postData = createPostDataBrowse(browseId);
+        if (postData == null) {
+            Log.e(TAG, "Error creating POST data for browse request.");
+            callback.onFetchFailed("Failed to create request data.");
+            return;
+        }
+
+        Log.d(TAG, "Post data for browse request: " + postData.toString());
+
+        RequestBody requestBody = RequestBody.create(
+                MediaType.parse("application/json"), postData.toString()
+        );
+
+        Log.d(TAG, "Sending API request with POST data: " + postData.toString());
+
+        apiService.getBrowseVideos(API_KEY, requestBody).enqueue(new Callback<JsonNode>() {
+            @Override
+            public void onResponse(Call<JsonNode> call, Response<JsonNode> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    Log.d(TAG, "Response received: " + response.body().toString());
+
+                    List<YouTubeResponse.ContentItem> browseResults = extractBrowseVideos(response.body());
+
+                    if (browseResults != null && !browseResults.isEmpty()) {
+                        Log.d(TAG, "Extracted browse results: " + browseResults.size() + " items found.");
+                        callback.onRelatedVideosFetched(browseResults);
+                    } else {
+                        Log.d(TAG, "No browse results found.");
+                        callback.onFetchFailed("No browse results found.");
+                    }
+                } else {
+                    Log.e(TAG, "Failed to fetch browse results: " + response.message());
+                    callback.onFetchFailed("Failed to fetch browse results.");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<JsonNode> call, Throwable t) {
+                Log.e(TAG, "Error fetching browse results: " + t.getMessage(), t);
+                callback.onFetchFailed("API call failed: " + t.getMessage());
+            }
+        });
+    }
+    private JsonNode createPostDataBrowse(String browseId) {
+        String jsonString = "{"
+                + "\"context\": {"
+                + "    \"client\": {"
+                + "        \"screenWidthPoints\": 1920,"
+                + "        \"screenHeightPoints\": 1050,"
+                + "        \"screenPixelDensity\": 1,"
+                + "        \"utcOffsetMinutes\": -300,"
+                + "        \"hl\": \"en\","
+                + "        \"gl\": \"US\","
+                + "        \"deviceMake\": \"Samsung\","
+                + "        \"deviceModel\": \"SmartTV\","
+                + "        \"visitorData\": \"CgsxVi1janRGNC02TSjp8rC9BjIKCgJVUxIEGgAgMQ%3D%3D\","
+                + "        \"userAgent\": \"Mozilla/5.0 (SMART-TV; Linux; Tizen 5.0) AppleWebKit/538.1 (KHTML, like Gecko) Version/5.0 NativeTVAds Safari/538.1,gzip(gfe)\","
+                + "        \"clientName\": \"TVHTML5\","
+                + "        \"clientVersion\": \"7.20250210.17.00\","
+                + "        \"osName\": \"Tizen\","
+                + "        \"osVersion\": \"5.0\","
+                + "        \"originalUrl\": \"https://www.youtube.com/tv\","
+                + "        \"theme\": \"CLASSIC\","
+                + "        \"platform\": \"TV\","
+                + "        \"clientFormFactor\": \"UNKNOWN_FORM_FACTOR\","
+                + "        \"webpSupport\": false"
+                + "    },"
+                + "    \"user\": { \"enableSafetyMode\": false },"
+                + "    \"request\": { \"internalExperimentFlags\": [], \"consistencyTokenJars\": [] }"
+                + "},"
+                + "\"browseId\": \"" + browseId + "\","
+                + "\"params\": \"EgIQAQ%3D%3D\""
+                + "}";
+
+        try {
+            return objectMapper.readTree(jsonString);
+        } catch (Exception e) {
+            Log.e(TAG, "Error creating JSON request body: " + e.getMessage());
+            return null;
+        }
+    }
+    private List<YouTubeResponse.ContentItem> extractBrowseVideos(JsonNode response) {
+        List<YouTubeResponse.ContentItem> relatedVideos = new ArrayList<>();
+        List<JsonNode> tileRenderers = new ArrayList<>();
+
+        try {
+
+            Log.d(TAG, "Full JSON Response: " + response.toString());
+
+            JsonNode topicRenderer = response.at("/contents/tvBrowseRenderer/content/tvSurfaceContentRenderer/content/sectionListRenderer/contents/0/shelfRenderer/content/horizontalListRenderer");
+
+            JsonNode specialChannelSections = response.at("/contents/tvBrowseRenderer/content/tvSecondaryNavRenderer/sections/0/tvSecondaryNavSectionRenderer/tabs/0/tabRenderer/content/tvSurfaceContentRenderer/content/sectionListRenderer/contents");
+
+            JsonNode items = topicRenderer.path("items");
+            boolean isTopic = !items.isMissingNode();
+
+            if (!isTopic) {
+                Log.w(TAG, "No shelfRenderer found, checking itemSectionRenderer for special channels.");
+                items = null;
+            }
+
+            if (items == null) {
+
+                for (JsonNode section : specialChannelSections) {
+                    JsonNode sectionItems = section.path("itemSectionRenderer").path("contents");
+                    if (sectionItems.isArray()) {
+                        for (JsonNode item : sectionItems) {
+                            if (item.has("tileRenderer")) {
+                                processTileRenderer(item.path("tileRenderer"), relatedVideos, tileRenderers);
+                            }
+                        }
+                    }
+                }
+            } else if (items.isArray()) {
+
+                for (JsonNode item : items) {
+                    JsonNode videoNode = item.path("tileRenderer");
+                    if (!videoNode.isMissingNode()) {
+                        processTileRenderer(videoNode, relatedVideos, tileRenderers);
+                    }
+                }
+            }
+
+            Log.d(TAG, "Total extracted browse videos: " + relatedVideos.size());
+        } catch (Exception e) {
+            Log.e(TAG, "Error parsing browse videos JSON: " + e.getMessage(), e);
+        }
+
+        return relatedVideos;
+    }
+    private void processTileRenderer(JsonNode videoNode, List<YouTubeResponse.ContentItem> relatedVideos, List<JsonNode> tileRenderers) {
+        if (videoNode.isObject()) {
+            tileRenderers.add(videoNode);
+            Log.d(TAG, "Logged TileRenderer: " + videoNode.toString());
+
+            String videoId = videoNode.path("onSelectCommand")
+                    .path("watchEndpoint")
+                    .path("videoId")
+                    .asText();
+            Log.d(TAG, "Video ID: " + videoId);
+
+            String title = videoNode.path("metadata")
+                    .path("tileMetadataRenderer")
+                    .path("title")
+                    .path("simpleText").asText();
+            Log.d(TAG, "Title: " + title);
+
+            String author = videoNode.path("metadata")
+                    .path("tileMetadataRenderer")
+                    .path("lines")
+                    .path(0)
+                    .path("lineRenderer")
+                    .path("items")
+                    .path(0)
+                    .path("lineItemRenderer")
+                    .path("text")
+                    .path("runs")
+                    .path(0)
+                    .path("text").asText();
+            Log.d(TAG, "Author: " + author);
+
+            String thumbnailUrl = "https://i.ytimg.com/vi/" + videoId + "/hqdefault.jpg";
+            Log.d(TAG, "Thumbnail URL: " + thumbnailUrl);
+
+            relatedVideos.add(new YouTubeResponse.ContentItem(videoId, title, thumbnailUrl));
+        } else {
+            Log.w(TAG, "TileRenderer is null or not an object: " + videoNode.toString());
+        }
+    }
     public void fetchSearchResults(String query) {
         Log.d(TAG, "Fetching search results for query: " + query);
 
@@ -137,7 +305,6 @@ public class YouTubeFetcher {
             }
         });
     }
-
     private JsonNode createPostDataSearch(String query) {
         String jsonString = "{"
                 + "\"context\": {"
@@ -176,7 +343,6 @@ public class YouTubeFetcher {
             return null;
         }
     }
-
     private List<YouTubeResponse.ContentItem> extractSearchResults(JsonNode response) {
         List<YouTubeResponse.ContentItem> searchResults = new ArrayList<>();
 
@@ -242,6 +408,10 @@ public class YouTubeFetcher {
         Log.d(TAG, "Total search results: " + searchResults.size());
 
         return searchResults;
+    }
+    public interface FetchRelatedVideosCallback {
+        void onRelatedVideosFetched(List<YouTubeResponse.ContentItem> relatedVideos);
+        void onFetchFailed(String errorMessage);
     }
     public void fetchRelatedVideos(String videoId) {
         Log.d(TAG, "Fetching related videos for videoId: " + videoId);

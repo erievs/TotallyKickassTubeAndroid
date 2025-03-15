@@ -35,4 +35,5 @@
         android:scrollbars="vertical"
         android:clipToPadding="false"
         android:contentDescription="List of search results" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

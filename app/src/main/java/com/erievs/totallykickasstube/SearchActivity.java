@@ -122,15 +122,5 @@ public class SearchActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    private String extractVideoIdFromThumbnailUrl(String thumbnailUrl) {
-        String videoId = null;
-        if (thumbnailUrl != null && thumbnailUrl.contains("/vi/")) {
-            int startIdx = thumbnailUrl.indexOf("/vi/") + 4;
-            int endIdx = thumbnailUrl.indexOf("/hqdefault.jpg");
-            if (startIdx > 0 && endIdx > startIdx) {
-                videoId = thumbnailUrl.substring(startIdx, endIdx);
-            }
-        }
-        return videoId;
-    }
+
 }

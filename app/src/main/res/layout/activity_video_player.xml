@@ -58,7 +58,10 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:use_controller="true"
+            app:auto_show="false"
             app:resize_mode="zoom"
+            app:played_color="#F44336"
+            app:controller_layout_id="@layout/tkt_exo_controller_layout"
             android:elevation="6dp" />
 
         <View

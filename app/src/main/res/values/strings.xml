@@ -1,3 +1,16 @@
 <resources>
     <string name="app_name">TotallyKickassTube</string>
+    <string name="navigation_drawer_open">Open Drawer</string>
+    <string name="navigation_drawer_close">Close Drawer</string>
+
+    <string-array name="drawer_menu_items">
+        <item>Popular on YouTube</item>
+        <item>Gaming</item>
+    </string-array>
+
+    <array name="drawer_menu_icons">
+        <item>@drawable/ic_baseline_home_24</item>
+        <item>@drawable/ic_baseline_gaming_24</item>
+    </array>
+
 </resources>
