@@ -39,7 +39,7 @@ public class RelatedVideosAdapter extends RecyclerView.Adapter<RelatedVideosAdap
         String thumbnailUrl = relatedVideo.videoRenderer.thumbnails.thumbnails.get(0).url;
 
         holder.videoTitle.setText(videoTitle);
-        holder.videoAuthor.setText(videoAuthor);
+        holder.videoAuthor.setText("By " + videoAuthor);
 
         Picasso.get().load(thumbnailUrl).into(holder.thumbnailImage);
 

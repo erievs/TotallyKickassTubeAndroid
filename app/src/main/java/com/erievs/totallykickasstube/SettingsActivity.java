@@ -11,8 +11,10 @@ public class SettingsActivity extends AppCompatActivity {
 
     private static final String PREFERENCES_NAME = "app_preferences";
     private static final String KEY_STREAMING_TYPE = "streaming_type";
+    private static final String KEY_YT_DLP_BRANCH = "yt_dlp_branch";
 
     private RadioGroup streamingTypeGroup;
+    private RadioGroup ytDlpBranchGroup;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,26 +22,39 @@ public class SettingsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_settings);
 
         streamingTypeGroup = findViewById(R.id.streaming_type_group);
+        ytDlpBranchGroup = findViewById(R.id.yt_dlp_branch_group);
 
-        // they're two types webm with vp9/opus and mp4 with avc1/acc
         SharedPreferences preferences = getSharedPreferences(PREFERENCES_NAME, MODE_PRIVATE);
-        String savedStreamingType = preferences.getString(KEY_STREAMING_TYPE, "mp4");
 
+        String savedStreamingType = preferences.getString(KEY_STREAMING_TYPE, "mp4");
         if ("webm".equals(savedStreamingType)) {
-            RadioButton webmRadioButton = findViewById(R.id.option_webm);
-            webmRadioButton.setChecked(true);
+            ((RadioButton) findViewById(R.id.option_webm)).setChecked(true);
         } else {
-            RadioButton mp4RadioButton = findViewById(R.id.option_mp4);
-            mp4RadioButton.setChecked(true);
+            ((RadioButton) findViewById(R.id.option_mp4)).setChecked(true);
+        }
+
+        String savedYtDlpBranch = preferences.getString(KEY_YT_DLP_BRANCH, "NIGHTLY");
+        switch (savedYtDlpBranch) {
+            case "STABLE":
+                ((RadioButton) findViewById(R.id.option_stable)).setChecked(true);
+                break;
+            case "MASTER":
+                ((RadioButton) findViewById(R.id.option_master)).setChecked(true);
+                break;
+            case "NIGHTLY":
+            default:
+                ((RadioButton) findViewById(R.id.option_nightly)).setChecked(true);
+                break;
         }
 
         streamingTypeGroup.setOnCheckedChangeListener((group, checkedId) -> {
-            RadioButton selectedRadioButton = findViewById(checkedId);
-            String selectedOption = selectedRadioButton.getText().toString().toLowerCase();
+            String selectedOption = ((RadioButton) findViewById(checkedId)).getText().toString().toLowerCase();
+            preferences.edit().putString(KEY_STREAMING_TYPE, selectedOption).apply();
+        });
 
-            SharedPreferences.Editor editor = preferences.edit();
-            editor.putString(KEY_STREAMING_TYPE, selectedOption);
-            editor.apply();
+        ytDlpBranchGroup.setOnCheckedChangeListener((group, checkedId) -> {
+            String selectedBranch = ((RadioButton) findViewById(checkedId)).getText().toString().toUpperCase();
+            preferences.edit().putString(KEY_YT_DLP_BRANCH, selectedBranch).apply();
         });
     }
 }

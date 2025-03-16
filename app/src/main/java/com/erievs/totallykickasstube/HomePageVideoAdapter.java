@@ -45,7 +45,7 @@ public class HomePageVideoAdapter extends RecyclerView.Adapter<HomePageVideoAdap
 
         if (videoItem.videoRenderer != null && videoItem.videoRenderer.author != null) {
             String author = videoItem.videoRenderer.author;
-            holder.videoAuthor.setText(author);
+            holder.videoAuthor.setText("By " + author);
         } else {
             holder.videoAuthor.setText("Unknown Author");
         }

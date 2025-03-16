@@ -45,7 +45,7 @@ public class SearchVideoAdapter extends RecyclerView.Adapter<SearchVideoAdapter.
 
         if (videoItem.videoRenderer != null && videoItem.videoRenderer.author != null) {
             String author = videoItem.videoRenderer.author;
-            holder.authorTitle.setText(author);
+            holder.authorTitle.setText("By " + author);
         } else {
             holder.authorTitle.setText("Unknown Author");
         }

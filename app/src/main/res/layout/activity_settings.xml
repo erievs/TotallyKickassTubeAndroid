@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp">
-
 
     <TextView
         android:id="@+id/settings_title"
@@ -19,12 +19,11 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-
     <TextView
         android:id="@+id/about_section_title"
         android:layout_width="wrap_content"
-        android:layout_marginTop="16dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         android:text="About TotallyKickAssTube"
         android:textSize="18sp"
         app:layout_constraintStart_toStartOf="parent"
@@ -34,26 +33,23 @@
         android:id="@+id/about_description"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="TotallyKickAssTube"
         android:layout_marginTop="8dp"
-        android:textSize="14sp"
         android:layout_marginBottom="16dp"
+        android:text="TotallyKickAssTube is a totally kick ass YouTube client."
+        android:textSize="14sp"
         app:layout_constraintTop_toBottomOf="@id/about_section_title"
         app:layout_constraintStart_toStartOf="parent" />
-
 
     <TextView
         android:id="@+id/app_version"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Version 1.0.0"
-        android:textSize="12sp"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="16dp"
+        android:text="Version 1.0.0"
+        android:textSize="12sp"
         app:layout_constraintTop_toBottomOf="@id/about_description"
-        app:layout_constraintStart_toStartOf="parent"
-        />
-
+        app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
         android:id="@+id/streaming_type_title"
@@ -87,22 +83,60 @@
             android:text="WebM" />
     </RadioGroup>
 
-
     <TextView
         android:id="@+id/streaming_explanation"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:padding="12dp"
+        android:text="@string/streaming_explanation"
+        android:textSize="14sp"
+        android:lineSpacingExtra="4dp"
+        android:ellipsize="end"
+        android:breakStrategy="simple"
+        android:background="?attr/colorSurface"
+        android:elevation="2dp"
+        android:textColor="?android:attr/textColorPrimary"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/streaming_type_group" />
+
+    <TextView
+        android:id="@+id/yt_dlp_branch_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:ellipsize="end"
-        android:text="MP4s use the AVC1 codec for video, and AAC for audio.
-        This supports more devices, however it uses more data and has less buffer
-        cache.\n\nWebMs use the VP9 codec for video, and Opus for audio.
-        This doesn't support all devices, and especially older devices
-        don't have hardware decoders, so it can use more battery. However, it saves data, and I'd suggest using this if you can."
-        android:textSize="14sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
+        android:layout_marginTop="40dp"
+        android:text="YT-DLP Branch"
+        android:textSize="18sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/streaming_type_group" />
+        app:layout_constraintTop_toBottomOf="@id/streaming_explanation" />
+
+    <RadioGroup
+        android:id="@+id/yt_dlp_branch_group"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintTop_toBottomOf="@id/yt_dlp_branch_title"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <RadioButton
+            android:id="@+id/option_master"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Master"
+            android:checked="true"/>
+
+        <RadioButton
+            android:id="@+id/option_nightly"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Nightly" />
+
+        <RadioButton
+            android:id="@+id/option_stable"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Stable" />
+    </RadioGroup>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

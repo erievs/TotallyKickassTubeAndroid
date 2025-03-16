@@ -21,4 +21,16 @@
         <item>@drawable/ic_baseline_settings_24</item>
     </array>
 
+    <string name="streaming_explanation">
+        MP4s use the AVC1 codec for video and AAC for audio.
+        This supports more devices but consumes more data and has less buffer cache.
+
+        WebMs use the VP9 codec for video and Opus for audio.
+        While it saves data, older devices may lack hardware decoders, increasing battery usage.
+        Use this if you can.
+    </string>
+
+
+
+
 </resources>

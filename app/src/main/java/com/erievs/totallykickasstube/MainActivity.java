@@ -3,6 +3,7 @@ package com.erievs.totallykickasstube;
 import static android.content.ContentValues.TAG;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.TypedArray;
 import android.os.Bundle;
 import android.util.Log;
@@ -40,6 +41,8 @@ public class MainActivity extends AppCompatActivity {
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private DrawerLayout drawerLayout;
     private ListView drawerList;
+    private static final String PREFERENCES_NAME = "app_preferences";
+    private static final String KEY_YT_DLP_BRANCH = "yt_dlp_branch";
     private static final String BROWSE_POPULAR = "UCF0pVplsI8R5kcAqgtoRqoA";
     private static final String BROWSE_SPORTS = "UCEgdi0XIXXZ-qJOFPf4JSKw";
     private static final String BROWSE_EDUCATION = "UCtFRv9O2AHqOZjjynzrv-xg";
@@ -121,7 +124,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
         String browseId = getIntent().getStringExtra("BROWSE_ID");
 
         if (browseId == null) {
@@ -150,23 +152,35 @@ public class MainActivity extends AppCompatActivity {
     private void initializeYoutubeDL() {
         try {
 
-            // this will download the latest version of yt-dlp on startup
+            SharedPreferences preferences = getSharedPreferences(PREFERENCES_NAME, MODE_PRIVATE);
+            String ytDlpBranch = preferences.getString(KEY_YT_DLP_BRANCH, "NIGHTLY");
 
             YoutubeDL.getInstance().init(this);
             FFmpeg.getInstance().init(this);
             Aria2c.getInstance().init(this);
 
-            YoutubeDL.getInstance().updateYoutubeDL(this, YoutubeDL.UpdateChannel._STABLE);
+            switch (ytDlpBranch) {
+                case "STABLE":
+                    YoutubeDL.getInstance().updateYoutubeDL(this, YoutubeDL.UpdateChannel._STABLE);
+                    break;
+                case "MASTER":
+                    YoutubeDL.getInstance().updateYoutubeDL(this, YoutubeDL.UpdateChannel._MASTER);
+                    break;
+                case "NIGHTLY":
+                default:
+                    YoutubeDL.getInstance().updateYoutubeDL(this, YoutubeDL.UpdateChannel._NIGHTLY);
+                    break;
+            }
 
             runOnUiThread(() -> {
                 Toast.makeText(MainActivity.this, "yt-dlp updated successfully!", Toast.LENGTH_SHORT).show();
             });
 
         } catch (Exception e) {
+
             runOnUiThread(() -> Toast.makeText(MainActivity.this, "Failed to update yt-dlp", Toast.LENGTH_LONG).show());
         }
     }
-
     private void fetchBrowseVideos(String browseID) {
 
         if (browseID == null || browseID.trim().isEmpty()) {
