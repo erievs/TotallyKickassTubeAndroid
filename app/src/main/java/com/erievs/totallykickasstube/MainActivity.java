@@ -40,8 +40,12 @@ public class MainActivity extends AppCompatActivity {
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private DrawerLayout drawerLayout;
     private ListView drawerList;
-    private static final String BROWSE_POPULAR = "UCF0pVplsI8R5kcAqgtoRqoA"; // Example Browse ID for popular
-    private static final String BROWSE_GAMING = "FEtopics_gaming"; // Example Browse ID for gaming
+    private static final String BROWSE_POPULAR = "UCF0pVplsI8R5kcAqgtoRqoA";
+    private static final String BROWSE_SPORTS = "UCEgdi0XIXXZ-qJOFPf4JSKw";
+    private static final String BROWSE_EDUCATION = "UCtFRv9O2AHqOZjjynzrv-xg";
+    private static final String BROWSE_FASHION = "UCrpQ4p1Ql_hG8rKXIKM1MOQ";
+    private static final String BROWSE_PODCASTS = "FEtopics_more&params=ugdbClkKDUZFdG9waWNzX21vcmUSDwoNRkV0b3BpY3NfbmV3cxIPCg1GRXRvcGljc19saXZlEhEKD0ZFdG9waWNzX3Nwb3J0cxITChFGRXRvcGljc19wb2RjYXN0cw%253D%253D";
+    private static final String BROWSE_GAMING = "FEtopics_gaming";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,6 +97,20 @@ public class MainActivity extends AppCompatActivity {
                     case 1:
                         browseId = BROWSE_GAMING;
                         break;
+                    case 2:
+                        browseId = BROWSE_SPORTS;
+                        break;
+                    case 3:
+                        browseId = BROWSE_EDUCATION;
+                        break;
+                    case 4:
+                        browseId = BROWSE_FASHION;
+                        break;
+                    case 5:
+                        Intent settingsIntent = new Intent(MainActivity.this, SettingsActivity.class);
+                        startActivity(settingsIntent);
+                        closeDrawer();
+                        return;
                     default:
                         browseId = BROWSE_POPULAR;
                         break;
@@ -103,7 +121,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        fetchBrowseVideos(BROWSE_POPULAR);
+
+        String browseId = getIntent().getStringExtra("BROWSE_ID");
+
+        if (browseId == null) {
+            browseId = BROWSE_POPULAR;
+        }
+
+        fetchBrowseVideos(browseId);
 
         searchView = findViewById(R.id.searchView);
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -124,7 +149,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void initializeYoutubeDL() {
         try {
-            // Initialize yt-dl, FFmpeg, and Aria2c
+
+            // this will download the latest version of yt-dlp on startup
+
             YoutubeDL.getInstance().init(this);
             FFmpeg.getInstance().init(this);
             Aria2c.getInstance().init(this);
@@ -177,6 +204,7 @@ public class MainActivity extends AppCompatActivity {
     private void navigateToVideoPlayerActivity(String videoUrl) {
         Intent intent = new Intent(MainActivity.this, VideoPlayerActivity.class);
         intent.putExtra("VIDEO_URL", videoUrl);
+
         startActivity(intent);
     }
     private void closeDrawer() {

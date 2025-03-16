@@ -18,7 +18,6 @@ public class RelatedVideosAdapter extends RecyclerView.Adapter<RelatedVideosAdap
     private List<YouTubeResponse.ContentItem> relatedVideos;
     private OnItemClickListener onItemClickListener;
 
-    // Constructor
     public RelatedVideosAdapter(List<YouTubeResponse.ContentItem> relatedVideos, OnItemClickListener onItemClickListener) {
         this.relatedVideos = relatedVideos;
         this.onItemClickListener = onItemClickListener;
@@ -27,7 +26,6 @@ public class RelatedVideosAdapter extends RecyclerView.Adapter<RelatedVideosAdap
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // Use your existing layout for related videos
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_related_video, parent, false);
         return new ViewHolder(view);
     }
@@ -35,10 +33,13 @@ public class RelatedVideosAdapter extends RecyclerView.Adapter<RelatedVideosAdap
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         YouTubeResponse.ContentItem relatedVideo = relatedVideos.get(position);
+
         String videoTitle = relatedVideo.videoRenderer.title.simpleText;
+        String videoAuthor = relatedVideo.videoRenderer.author;
         String thumbnailUrl = relatedVideo.videoRenderer.thumbnails.thumbnails.get(0).url;
 
         holder.videoTitle.setText(videoTitle);
+        holder.videoAuthor.setText(videoAuthor);
 
         Picasso.get().load(thumbnailUrl).into(holder.thumbnailImage);
 
@@ -77,12 +78,14 @@ public class RelatedVideosAdapter extends RecyclerView.Adapter<RelatedVideosAdap
     }
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView videoTitle;
+        TextView videoAuthor;
         ImageView thumbnailImage;
 
         public ViewHolder(View itemView) {
             super(itemView);
-            videoTitle = itemView.findViewById(R.id.videoTitle); // Use the existing TextView
-            thumbnailImage = itemView.findViewById(R.id.thumbnailImage); // Use the existing ImageView
+            videoTitle = itemView.findViewById(R.id.videoTitle);
+            videoAuthor = itemView.findViewById(R.id.authorTitle);
+            thumbnailImage = itemView.findViewById(R.id.thumbnailImage);
         }
     }
 

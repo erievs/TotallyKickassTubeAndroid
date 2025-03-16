@@ -43,6 +43,13 @@ public class SearchVideoAdapter extends RecyclerView.Adapter<SearchVideoAdapter.
             holder.videoTitle.setText("Unknown Title");
         }
 
+        if (videoItem.videoRenderer != null && videoItem.videoRenderer.author != null) {
+            String author = videoItem.videoRenderer.author;
+            holder.authorTitle.setText(author);
+        } else {
+            holder.authorTitle.setText("Unknown Author");
+        }
+
         String thumbnailUrl = null;
         if (videoItem.videoRenderer != null && videoItem.videoRenderer.thumbnails != null
                 && !videoItem.videoRenderer.thumbnails.thumbnails.isEmpty()) {
@@ -89,11 +96,13 @@ public class SearchVideoAdapter extends RecyclerView.Adapter<SearchVideoAdapter.
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView videoTitle;
+        TextView authorTitle;
         ImageView thumbnailImage;
 
         public ViewHolder(View itemView) {
             super(itemView);
             videoTitle = itemView.findViewById(R.id.videoTitle);
+            authorTitle = itemView.findViewById(R.id.authorTitle);
             thumbnailImage = itemView.findViewById(R.id.thumbnailImage);
         }
     }

@@ -34,6 +34,7 @@
 
         <activity android:name=".SearchActivity" />
 
+        <activity android:name=".SettingsActivity" />
 
     </application>
 

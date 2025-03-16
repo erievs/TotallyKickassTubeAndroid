@@ -21,17 +21,25 @@ import retrofit2.http.Headers;
 import retrofit2.http.POST;
 import retrofit2.http.Query;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Set;
 
 public class YouTubeFetcher {
+
+    // you can also use googleapi end point, but this is nicer looking
     private static final String BASE_URL = "https://www.youtube.com/youtubei/v1/";
+
+    // idk if this is REALLY needed I always do just in case
     private static final String API_KEY = "AIzaSyDCU8hByM-4DrUqRUYnGn-3llEO78bcxq8";
     private static final String TAG = "YouTubeFetcher";
 
     private YouTubeApiService apiService;
     private FetchRelatedVideosCallback callback;
     private ObjectMapper objectMapper;
+
+    // too lazy to change the name to fit what we do here now
     public YouTubeFetcher(FetchRelatedVideosCallback callback) {
 
         objectMapper = new ObjectMapper();
@@ -47,10 +55,11 @@ public class YouTubeFetcher {
     public interface FetchVideoTitleCallback {
         void onTitleFetched(String title);
     }
-    public void fetchVideoTitle(String videoUrl, FetchVideoTitleCallback callback) {
 
+    // going to improve this later, probbaly just use /next and get the description and such
+    // I was just lazy and wanted to add the title
+    public static void fetchVideoTitle(String videoUrl, FetchVideoTitleCallback callback) {
         new AsyncTask<String, Void, String>() {
-
             @Override
             protected String doInBackground(String... params) {
                 String videoTitle = null;
@@ -81,12 +90,15 @@ public class YouTubeFetcher {
                 "Accept: application/json"
         })
 
+        // fyi the next can do a whole lot more, get the description (iirc), author profiles and such
         @POST("next")
         Call<JsonNode> getRelatedVideos(@Query("key") String apiKey, @Body RequestBody body);
 
         @POST("search")
         Call<JsonNode> getSearchResults(@Query("key") String apiKey, @Body RequestBody body);
 
+        // browse is USED a lot, it is used for channels, topics, playlists, and probbaly more.
+        // with that being said, you use search to search stuff
         @POST("browse")
         Call<JsonNode> getBrowseVideos(@Query("key") String apiKey, @Body RequestBody body);
 
@@ -138,6 +150,11 @@ public class YouTubeFetcher {
         });
     }
     private JsonNode createPostDataBrowse(String browseId) {
+
+        // you need send the right client contex for the the data
+        // I use TV html, since I am used to it, and you can easly get
+        // access_codes for it (idk if sign in will be public since I don't want google to fuck me up)
+
         String jsonString = "{"
                 + "\"context\": {"
                 + "    \"client\": {"
@@ -178,6 +195,9 @@ public class YouTubeFetcher {
     private List<YouTubeResponse.ContentItem> extractBrowseVideos(JsonNode response) {
         List<YouTubeResponse.ContentItem> relatedVideos = new ArrayList<>();
         List<JsonNode> tileRenderers = new ArrayList<>();
+
+        // this is a little different than the rest since
+        // you have to deal with mutiple entry points for channels and stuff
 
         try {
 
@@ -253,12 +273,13 @@ public class YouTubeFetcher {
                     .path("runs")
                     .path(0)
                     .path("text").asText();
+
             Log.d(TAG, "Author: " + author);
 
             String thumbnailUrl = "https://i.ytimg.com/vi/" + videoId + "/hqdefault.jpg";
             Log.d(TAG, "Thumbnail URL: " + thumbnailUrl);
 
-            relatedVideos.add(new YouTubeResponse.ContentItem(videoId, title, thumbnailUrl));
+            relatedVideos.add(new YouTubeResponse.ContentItem(videoId, title, thumbnailUrl, author));
         } else {
             Log.w(TAG, "TileRenderer is null or not an object: " + videoNode.toString());
         }
@@ -333,7 +354,7 @@ public class YouTubeFetcher {
                 + "    \"request\": { \"internalExperimentFlags\": [], \"consistencyTokenJars\": [] }"
                 + "},"
                 + "\"query\": \"" + query + "\","
-                + "\"params\": \"EgIQAQ%3D%3D\""
+                + "\"params\": \"6gILVWtfVEZTVG5MTmvqAgtxS3A1RkJDZjh1WeoCC181OXkwRzdhczFN6gILOEhfT19mUkFTd0X6AgpMb2NhbCBuZXdz\""
                 + "}";
 
         try {
@@ -360,7 +381,7 @@ public class YouTubeFetcher {
                             for (JsonNode item : items) {
                                 JsonNode tileRenderer = item.path("tileRenderer");
                                 if (!tileRenderer.isMissingNode() && tileRenderer.isObject()) {
-                                    // Extracting data
+
                                     String videoId = tileRenderer.path("onSelectCommand")
                                             .path("watchEndpoint")
                                             .path("videoId")
@@ -386,14 +407,16 @@ public class YouTubeFetcher {
 
                                     String thumbnailUrl = "https://i.ytimg.com/vi/" + videoId + "/hqdefault.jpg";
 
-                                    // Log the extracted information
-                                    Log.d(TAG, "Video ID: " + videoId);
-                                    Log.d(TAG, "Title: " + title);
-                                    Log.d(TAG, "Author: " + author);
-                                    Log.d(TAG, "Thumbnail URL: " + thumbnailUrl);
+                                    if (!videoId.isEmpty() && !thumbnailUrl.isEmpty()) {
+                                        Log.d(TAG, "Video ID: " + videoId);
+                                        Log.d(TAG, "Title: " + title);
+                                        Log.d(TAG, "Author: " + author);
+                                        Log.d(TAG, "Thumbnail URL: " + thumbnailUrl);
 
-                                    // Add to the results list
-                                    searchResults.add(new YouTubeResponse.ContentItem(videoId, title, thumbnailUrl));
+                                        searchResults.add(new YouTubeResponse.ContentItem(videoId, title, thumbnailUrl, author));
+                                    } else {
+                                        Log.d(TAG, "Skipping item due to missing videoId or thumbnail");
+                                    }
                                 }
                             }
                         }
@@ -404,7 +427,6 @@ public class YouTubeFetcher {
             Log.e(TAG, "Error parsing search results JSON: " + e.getMessage(), e);
         }
 
-        // Log the total number of search results found
         Log.d(TAG, "Total search results: " + searchResults.size());
 
         return searchResults;
@@ -490,76 +512,105 @@ public class YouTubeFetcher {
     }
     private List<YouTubeResponse.ContentItem> extractRelatedVideos(JsonNode response) {
         List<YouTubeResponse.ContentItem> relatedVideos = new ArrayList<>();
-        List<JsonNode> tileRenderers = new ArrayList<>();
+        Set<String> videoIdsSet = new HashSet<>();
+
+        // you have to look though some shelf renders
+        // since how on the tv app, they're 3 videos per row
+        // if you just pick the first one you're stuck with 3 videos and that's lame
 
         try {
-            // Log the entire JSON response to inspect its structure
+
             Log.d(TAG, "Full JSON Response: " + response.toString());
 
-            JsonNode horizontalListRenderer = response.at("/contents/singleColumnWatchNextResults/pivot/sectionListRenderer/contents/0/shelfRenderer/content/horizontalListRenderer");
-            Log.d(TAG, "HorizontalListRenderer Node: " + horizontalListRenderer.toString());
+            JsonNode contents = response.path("contents")
+                    .path("singleColumnWatchNextResults")
+                    .path("pivot")
+                    .path("sectionListRenderer")
+                    .path("contents");
 
-            JsonNode items = horizontalListRenderer.path("items");
+            if (contents.isArray()) {
+                Log.d(TAG, "Total 'shelfRenderer' sections found: " + contents.size());
 
-            if (items.isArray()) {
-                int totalVideos = items.size();
-                Log.d(TAG, "Total videos found in 'items': " + totalVideos);
+                for (JsonNode section : contents) {
 
-                for (JsonNode item : items) {
-                    Log.d(TAG, "Item Node: " + item.toString());
+                    Log.d(TAG, "Section Node: " + section.toString());
 
-                    JsonNode videoNode = item.path("tileRenderer");
-                    Log.d(TAG, "TileRenderer Node: " + videoNode.toString());
+                    JsonNode shelfRenderer = section.path("shelfRenderer");
+                    if (!shelfRenderer.isNull()) {
+                        JsonNode horizontalListRenderer = shelfRenderer.path("content")
+                                .path("horizontalListRenderer");
 
-                    if (!videoNode.isNull() && videoNode.isObject()) {
-                        tileRenderers.add(videoNode);
-                        Log.d(TAG, "Logged TileRenderer: " + videoNode.toString());
+                        if (!horizontalListRenderer.isNull()) {
 
-                        String videoId = videoNode.path("onSelectCommand")
-                                .path("watchEndpoint")
-                                .path("videoId")
-                                .asText();
-                        Log.d(TAG, "Video ID: " + videoId);
+                            Log.d(TAG, "HorizontalListRenderer Node: " + horizontalListRenderer.toString());
 
-                        String title = videoNode.path("metadata")
-                                .path("tileMetadataRenderer")
-                                .path("title")
-                                .path("simpleText").asText();
-                        Log.d(TAG, "Title: " + title);
+                            JsonNode items = horizontalListRenderer.path("items");
+                            if (items.isArray()) {
+                                int totalVideos = items.size();
+                                Log.d(TAG, "Total videos found in 'items': " + totalVideos);
 
-                        String author = videoNode.path("metadata")
-                                .path("tileMetadataRenderer")
-                                .path("lines")
-                                .path(0)
-                                .path("lineRenderer")
-                                .path("items")
-                                .path(0)
-                                .path("lineItemRenderer")
-                                .path("text")
-                                .path("runs")
-                                .path(0)
-                                .path("text").asText();
-                        Log.d(TAG, "Author: " + author);
+                                for (JsonNode item : items) {
+                                    Log.d(TAG, "Item Node: " + item.toString());
 
-                        String thumbnailUrl = "https://i.ytimg.com/vi/" + videoId + "/hqdefault.jpg";
-                        Log.d(TAG, "Thumbnail URL: " + thumbnailUrl);
+                                    JsonNode videoNode = item.path("tileRenderer");
+                                    if (!videoNode.isNull() && videoNode.isObject()) {
 
-                        relatedVideos.add(new YouTubeResponse.ContentItem(videoId, title, thumbnailUrl));
-                    } else {
-                        Log.w(TAG, "TileRenderer is null or not an object in item: " + item.toString());
+                                        String videoId = videoNode.path("onSelectCommand")
+                                                .path("watchEndpoint")
+                                                .path("videoId")
+                                                .asText();
+
+                                        if (videoIdsSet.contains(videoId)) {
+                                            continue;
+                                        }
+
+                                        videoIdsSet.add(videoId);
+
+                                        Log.d(TAG, "Video ID: " + videoId);
+
+                                        String title = videoNode.path("metadata")
+                                                .path("tileMetadataRenderer")
+                                                .path("title")
+                                                .path("simpleText").asText();
+                                        Log.d(TAG, "Title: " + title);
+
+                                        String author = videoNode.path("metadata")
+                                                .path("tileMetadataRenderer")
+                                                .path("lines")
+                                                .path(0)
+                                                .path("lineRenderer")
+                                                .path("items")
+                                                .path(0)
+                                                .path("lineItemRenderer")
+                                                .path("text")
+                                                .path("runs")
+                                                .path(0)
+                                                .path("text").asText();
+                                        Log.d(TAG, "Author: " + author);
+
+                                        String thumbnailUrl = "https://i.ytimg.com/vi/" + videoId + "/hqdefault.jpg";
+                                        Log.d(TAG, "Thumbnail URL: " + thumbnailUrl);
+
+                                        relatedVideos.add(new YouTubeResponse.ContentItem(videoId, title, thumbnailUrl, author));
+                                    } else {
+                                        Log.w(TAG, "TileRenderer is null or not an object in item: " + item.toString());
+                                    }
+                                }
+                            } else {
+                                Log.w(TAG, "'items' is not an array in horizontalListRenderer: " + horizontalListRenderer.toString());
+                            }
+                        }
                     }
                 }
-
-                Log.d(TAG, "Total extracted related videos: " + relatedVideos.size());
-
             } else {
-                Log.w(TAG, "'items' is not an array in horizontalListRenderer: " + horizontalListRenderer.toString());
+                Log.w(TAG, "'contents' is not an array in the response: " + response.toString());
             }
+
+            Log.d(TAG, "Collected TileRenderers: " + relatedVideos.toString());
+
         } catch (Exception e) {
             Log.e(TAG, "Error parsing related videos JSON: " + e.getMessage(), e);
         }
-
-        Log.d(TAG, "Collected TileRenderers: " + tileRenderers.toString());
 
         return relatedVideos;
     }

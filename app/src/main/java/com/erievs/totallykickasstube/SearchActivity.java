@@ -1,12 +1,20 @@
 package com.erievs.totallykickasstube;
 
 import android.content.Intent;
+import android.content.res.TypedArray;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -20,6 +28,14 @@ public class SearchActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private SearchVideoAdapter videoAdapter;
     private List<YouTubeResponse.ContentItem> videoList;
+    private DrawerLayout drawerLayout;
+    private ListView drawerList;
+    private static final String BROWSE_POPULAR = "UCF0pVplsI8R5kcAqgtoRqoA";
+    private static final String BROWSE_SPORTS = "UCEgdi0XIXXZ-qJOFPf4JSKw";
+    private static final String BROWSE_EDUCATION = "UCtFRv9O2AHqOZjjynzrv-xg";
+    private static final String BROWSE_FASHION = "UCrpQ4p1Ql_hG8rKXIKM1MOQ";
+    //private static final String BROWSE_PODCASTS = "FEtopics_more&params=ugdbClkKDUZFdG9waWNzX21vcmUSDwoNRkV0b3BpY3NfbmV3cxIPCg1GRXRvcGljc19saXZlEhEKD0ZFdG9waWNzX3Nwb3J0cxITChFGRXRvcGljc19wb2RjYXN0cw%253D%253D";
+    private static final String BROWSE_GAMING = "FEtopics_gaming";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,13 +48,60 @@ public class SearchActivity extends AppCompatActivity {
 
         videoList = new ArrayList<>();
 
-        videoAdapter = new SearchVideoAdapter(videoList, new SearchVideoAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClick(String videoUrl) {
-                navigateToVideoPlayerActivity(videoUrl);
-            }
-        });
+        videoAdapter = new SearchVideoAdapter(videoList, this::navigateToVideoPlayerActivity);
 
+        drawerLayout = findViewById(R.id.drawer_layout);
+        drawerList = findViewById(R.id.drawer_list);
+
+        String[] drawerMenuItems = getResources().getStringArray(R.array.drawer_menu_items);
+        TypedArray drawerMenuIcons = getResources().obtainTypedArray(R.array.drawer_menu_icons);
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.list_item_drawer, R.id.drawer_text, drawerMenuItems) {
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                View view = super.getView(position, convertView, parent);
+
+                ImageView iconView = view.findViewById(R.id.drawer_icon);
+                iconView.setImageDrawable(drawerMenuIcons.getDrawable(position));
+
+                return view;
+            }
+        };
+
+        drawerList.setAdapter(adapter);
+
+        drawerList.setOnItemClickListener((parent, view, position, id) -> {
+            String browseId = "";
+
+            switch (position) {
+                case 1:
+                    browseId = BROWSE_GAMING;
+                    break;
+                case 2:
+                    browseId = BROWSE_SPORTS;
+                    break;
+                case 3:
+                    browseId = BROWSE_EDUCATION;
+                    break;
+                case 4:
+                    browseId = BROWSE_FASHION;
+                    break;
+                case 5:
+                    Intent settingsIntent = new Intent(SearchActivity.this, SettingsActivity.class);
+                    startActivity(settingsIntent);
+                    closeDrawer();
+                    return;
+                default:
+                    browseId = BROWSE_POPULAR;
+                    break;
+            }
+
+            Intent intent = new Intent(SearchActivity.this, MainActivity.class);
+            intent.putExtra("BROWSE_ID", browseId);
+            startActivity(intent);
+
+            closeDrawer();
+        });
 
         recyclerView.setAdapter(videoAdapter);
 
@@ -121,6 +184,8 @@ public class SearchActivity extends AppCompatActivity {
         intent.putExtra("VIDEO_URL", videoUrl);
         startActivity(intent);
     }
-
+    private void closeDrawer() {
+        drawerLayout.closeDrawers();
+    }
 
 }

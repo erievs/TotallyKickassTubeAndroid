@@ -43,6 +43,13 @@ public class HomePageVideoAdapter extends RecyclerView.Adapter<HomePageVideoAdap
             holder.videoTitle.setText("Unknown Title");
         }
 
+        if (videoItem.videoRenderer != null && videoItem.videoRenderer.author != null) {
+            String author = videoItem.videoRenderer.author;
+            holder.videoAuthor.setText(author);
+        } else {
+            holder.videoAuthor.setText("Unknown Author");
+        }
+
         String thumbnailUrl = null;
         if (videoItem.videoRenderer != null && videoItem.videoRenderer.thumbnails != null
                 && !videoItem.videoRenderer.thumbnails.thumbnails.isEmpty()) {
@@ -89,11 +96,13 @@ public class HomePageVideoAdapter extends RecyclerView.Adapter<HomePageVideoAdap
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView videoTitle;
+        TextView videoAuthor;
         ImageView thumbnailImage;
 
         public ViewHolder(View itemView) {
             super(itemView);
             videoTitle = itemView.findViewById(R.id.videoTitle);
+            videoAuthor = itemView.findViewById(R.id.authorTitle);
             thumbnailImage = itemView.findViewById(R.id.thumbnailImage);
         }
     }

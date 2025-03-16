@@ -6,11 +6,19 @@
     <string-array name="drawer_menu_items">
         <item>Popular on YouTube</item>
         <item>Gaming</item>
+        <item>Sports</item>
+        <item>Education</item>
+        <item>Fashion</item>
+        <item>Settings</item>
     </string-array>
 
     <array name="drawer_menu_icons">
         <item>@drawable/ic_baseline_home_24</item>
         <item>@drawable/ic_baseline_gaming_24</item>
+        <item>@drawable/ic_baseline_sports_24</item>
+        <item>@drawable/ic_baseline_education_24</item>
+        <item>@drawable/ic_baseline_fashion_24</item>
+        <item>@drawable/ic_baseline_settings_24</item>
     </array>
 
 </resources>
