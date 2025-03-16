@@ -75,7 +75,12 @@ I welcome contributions, if you really want to. Here’s how you can help:
 
 I'd say ensure that your code follows the existing style, but I really have no style it is all crap,
 just make sure it works and isn't malware and I'll probably merge. I don't care if Android Studio whines 
-about the quailty, this app is already programmed like crap anyways (probably ChatGPT could do better lol).
+about the quality, this app is already programmed like crap anyways (probably ChatGPT could do better lol).
+
+Don't care if you used ChatGPT or something, as long as it's only for programming/basic UX,
+and you know it works.
+
+DO NOT USE AI ICONS OR ANYTHING AT ALL FOR THE LOVE OF GOD
 
 ## License
 
