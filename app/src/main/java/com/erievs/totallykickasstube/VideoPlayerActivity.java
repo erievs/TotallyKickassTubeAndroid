@@ -26,9 +26,12 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.ui.PlayerView;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class VideoPlayerActivity extends AppCompatActivity implements YouTubeFetcher.FetchRelatedVideosCallback {
 
@@ -44,10 +47,12 @@ public class VideoPlayerActivity extends AppCompatActivity implements YouTubeFet
     private static final String BROWSE_SPORTS = "UCEgdi0XIXXZ-qJOFPf4JSKw";
     private static final String BROWSE_EDUCATION = "UCtFRv9O2AHqOZjjynzrv-xg";
     private static final String BROWSE_FASHION = "UCrpQ4p1Ql_hG8rKXIKM1MOQ";
-    private static final String BROWSE_PODCASTS = "FEtopics_more&params=ugdbClkKDUZFdG9waWNzX21vcmUSDwoNRkV0b3BpY3NfbmV3cxIPCg1GRXRvcGljc19saXZlEhEKD0ZFdG9waWNzX3Nwb3J0cxITChFGRXRvcGljc19wb2RjYXN0cw%253D%253D";
+    private static final String BROWSE_SPOTLIGHT = "UCBR8-60-B28hp2BmDPdntcQ";
     private static final String BROWSE_GAMING = "FEtopics_gaming";
     private boolean isFullscreen = false;
-
+    private TextView descriptionTextView;
+    private TextView readMoreTextView;
+    private boolean isDescriptionExpanded = false;
     private static final String PREFERENCES_NAME = "app_preferences";
     private static final String KEY_STREAMING_TYPE = "streaming_type";
 
@@ -117,6 +122,9 @@ public class VideoPlayerActivity extends AppCompatActivity implements YouTubeFet
                         browseId = BROWSE_FASHION;
                         break;
                     case 5:
+                        browseId = BROWSE_SPOTLIGHT;
+                        break;
+                    case 6:
                         Intent settingsIntent = new Intent(VideoPlayerActivity.this, SettingsActivity.class);
                         startActivity(settingsIntent);
                         closeDrawer();
@@ -146,16 +154,8 @@ public class VideoPlayerActivity extends AppCompatActivity implements YouTubeFet
 
         YouTubeFetcher fetcher = new YouTubeFetcher(this);
 
-        fetcher.fetchVideoTitle(videoUrl, new YouTubeFetcher.FetchVideoTitleCallback() {
-            @Override
-            public void onTitleFetched(String title) {
-                if (title != null) {
-                    videoTitle.setText(title);
-                } else {
-                    Toast.makeText(VideoPlayerActivity.this, "Failed to fetch video title", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
+        fetcher.fetchVideoDetails(YouTubeUtils.extractVideoId(videoUrl));
+
 
         SharedPreferences preferences = getSharedPreferences(PREFERENCES_NAME, MODE_PRIVATE);
         String streamingType = preferences.getString(KEY_STREAMING_TYPE, "mp4");
@@ -168,6 +168,29 @@ public class VideoPlayerActivity extends AppCompatActivity implements YouTubeFet
         } else {
             Toast.makeText(this, "Invalid video ID", Toast.LENGTH_SHORT).show();
         }
+
+        descriptionTextView = findViewById(R.id.descriptionTextView);
+        readMoreTextView = findViewById(R.id.readMoreTextView);
+
+        readMoreTextView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                toggleDescription();
+            }
+        });
+
+    }
+    private void toggleDescription() {
+        if (isDescriptionExpanded) {
+            descriptionTextView.setMaxLines(3);
+            descriptionTextView.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            readMoreTextView.setText("Read More");
+        } else {
+            descriptionTextView.setMaxLines(Integer.MAX_VALUE);
+            descriptionTextView.setEllipsize(null);
+            readMoreTextView.setText("Read Less");
+        }
+        isDescriptionExpanded = !isDescriptionExpanded;
     }
 
     @Override
@@ -202,6 +225,34 @@ public class VideoPlayerActivity extends AppCompatActivity implements YouTubeFet
     @Override
     public void onFetchFailed(String errorMessage) {
         Toast.makeText(this, "Failed to fetch related videos: " + errorMessage, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onVideoDetailsFetched(YouTubeResponse.VideoDetails videoDetails) {
+
+        String title = videoDetails.title;
+        videoTitle.setText(title);
+
+        String profilePictureUrl = videoDetails.profilePictureUrl;
+        ImageView pfpImageView = findViewById(R.id.pfpImageView);
+        Picasso.get().load(profilePictureUrl).into(pfpImageView);
+
+        String username = videoDetails.author;
+        TextView usernameTextView = findViewById(R.id.usernameTextView);
+        usernameTextView.setText(username);
+
+        String subCount = videoDetails.subscriberCount;
+        TextView subCountTextView = findViewById(R.id.subscriberCountTextView);
+        subCountTextView.setText(subCount);
+
+        String publishedText = videoDetails.publishedDate;
+        TextView publishedTextView = findViewById(R.id.publishedDateTextView);
+        publishedTextView.setText(formatPublishedDate(publishedText));
+
+        String description = videoDetails.description;
+        TextView descriptionTextView = findViewById(R.id.descriptionTextView);
+        descriptionTextView.setText(description);
+
     }
 
     @Override
@@ -270,6 +321,45 @@ public class VideoPlayerActivity extends AppCompatActivity implements YouTubeFet
 
         isFullscreen = false;
     }
+    private String formatPublishedDate(String time) {
+        if (time == null || time.isEmpty()) {
+            return "Published some time ago";
+        }
+
+        // dates are like 1d, 1y, etc
+        // it requires more effort for
+        // exact date now
+
+        Pattern pattern = Pattern.compile("(\\d+)([smhdwMy])");
+        Matcher matcher = pattern.matcher(time);
+
+        if (matcher.find()) {
+            int value = Integer.parseInt(matcher.group(1));
+            char unit = matcher.group(2).charAt(0);
+
+            String unitText;
+            switch (unit) {
+                case 's': unitText = "Second"; break;
+                case 'm': unitText = "Minute"; break;
+                case 'h': unitText = "Hour"; break;
+                case 'd': unitText = "Day"; break;
+                case 'w': unitText = "Week"; break;
+                case 'M': unitText = "Month"; break;
+                case 'y': unitText = "Year"; break;
+                default:
+                    return "Published some time ago";
+            }
+
+            if (value > 1) {
+                unitText += "s";
+            }
+
+            return "Published " + value + " " + unitText + " Ago";
+        }
+
+        return "Published some time ago";
+    }
+
 
     private void navigateToVideoPlayerActivity(String videoUrl) {
 

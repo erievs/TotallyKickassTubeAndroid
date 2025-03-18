@@ -56,8 +56,11 @@ public class YouTubeFetcher {
         void onTitleFetched(String title);
     }
 
-    // going to improve this later, probbaly just use /next and get the description and such
-    // I was just lazy and wanted to add the title
+    // we don't use this anymore really
+    // but I still have it just in case
+    // but probbaly never going to use
+    // since videoDetails gets you this
+    // and more
     public static void fetchVideoTitle(String videoUrl, FetchVideoTitleCallback callback) {
         new AsyncTask<String, Void, String>() {
             @Override
@@ -91,7 +94,7 @@ public class YouTubeFetcher {
         })
 
         // fyi the next can do a whole lot more, get the description (iirc), author profiles and such
-        @POST("next")
+        @POST("next") // also used for videoDetails
         Call<JsonNode> getRelatedVideos(@Query("key") String apiKey, @Body RequestBody body);
 
         @POST("search")
@@ -101,6 +104,7 @@ public class YouTubeFetcher {
         // with that being said, you use search to search stuff
         @POST("browse")
         Call<JsonNode> getBrowseVideos(@Query("key") String apiKey, @Body RequestBody body);
+
 
     }
     public void fetchBrowseVideos(String browseId) {
@@ -434,6 +438,7 @@ public class YouTubeFetcher {
     public interface FetchRelatedVideosCallback {
         void onRelatedVideosFetched(List<YouTubeResponse.ContentItem> relatedVideos);
         void onFetchFailed(String errorMessage);
+        void onVideoDetailsFetched(YouTubeResponse.VideoDetails videoDetails);
     }
     public void fetchRelatedVideos(String videoId) {
         Log.d(TAG, "Fetching related videos for videoId: " + videoId);
@@ -614,5 +619,128 @@ public class YouTubeFetcher {
 
         return relatedVideos;
     }
+    public void fetchVideoDetails(String videoId) {
+        Log.d(TAG, "Fetching video details for videoId: " + videoId);
+
+        JsonNode postData = createPostDataVideoDetails(videoId);
+        RequestBody requestBody = RequestBody.create(
+                MediaType.parse("application/json"), postData.toString()
+        );
+
+        apiService.getRelatedVideos(API_KEY, requestBody).enqueue(new Callback<JsonNode>() {
+
+            @Override
+            public void onResponse(Call<JsonNode> call, Response<JsonNode> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    Log.d(TAG, "Response body: " + response.body().toString());
+                    YouTubeResponse.VideoDetails videoDetails = extractVideoDetails(response.body(), videoId);
+                    if (videoDetails != null) {
+                        callback.onVideoDetailsFetched(videoDetails);
+                    } else {
+                        callback.onFetchFailed("Failed to extract video details.");
+                    }
+                } else {
+                    String errorBody = response.errorBody() != null ? response.errorBody().toString() : "Unknown error";
+                    Log.e(TAG, "Failed to fetch video details: " + response.message() + " | " + errorBody);
+                    callback.onFetchFailed("Failed to fetch video details: " + response.message());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<JsonNode> call, Throwable t) {
+                Log.e(TAG, "Error fetching video details: " + t.getMessage());
+                callback.onFetchFailed("API call failed: " + t.getMessage());
+            }
+        });
+    }
+
+    private JsonNode createPostDataVideoDetails(String videoId) {
+        String jsonString = "{"
+                + "\"context\": {"
+                + "    \"client\": {"
+                + "        \"screenWidthPoints\": 1920,"
+                + "        \"screenHeightPoints\": 1050,"
+                + "        \"screenPixelDensity\": 1,"
+                + "        \"utcOffsetMinutes\": -300,"
+                + "        \"hl\": \"en\","
+                + "        \"gl\": \"US\","
+                + "        \"deviceMake\": \"Samsung\","
+                + "        \"deviceModel\": \"SmartTV\","
+                + "        \"visitorData\": \"CgsxVi1janRGNC02TSjp8rC9BjIKCgJVUxIEGgAgMQ%3D%3D\","
+                + "        \"userAgent\": \"Mozilla/5.0 (SMART-TV; Linux; Tizen 5.0) AppleWebKit/538.1 (KHTML, like Gecko) Version/5.0 NativeTVAds Safari/538.1,gzip(gfe)\","
+                + "        \"clientName\": \"TVHTML5\","
+                + "        \"clientVersion\": \"7.20250210.17.00\","
+                + "        \"osName\": \"Tizen\","
+                + "        \"osVersion\": \"5.0\","
+                + "        \"originalUrl\": \"https://www.youtube.com/tv\","
+                + "        \"theme\": \"CLASSIC\","
+                + "        \"platform\": \"TV\","
+                + "        \"clientFormFactor\": \"UNKNOWN_FORM_FACTOR\","
+                + "        \"webpSupport\": false"
+                + "    },"
+                + "    \"user\": { \"enableSafetyMode\": false },"
+                + "    \"request\": { \"internalExperimentFlags\": [], \"consistencyTokenJars\": [] }"
+                + "},"
+                + "\"videoId\": \"" + videoId + "\","
+                + "\"racyCheckOk\": true,"
+                + "\"contentCheckOk\": true"
+                + "}";
+
+        try {
+            return objectMapper.readTree(jsonString);
+        } catch (Exception e) {
+            Log.e(TAG, "Error creating JSON request body: " + e.getMessage());
+            return null;
+        }
+    }
+    private YouTubeResponse.VideoDetails extractVideoDetails(JsonNode response, String videoId) {
+        try {
+            JsonNode videoMetadata = response.path("contents")
+                    .path("singleColumnWatchNextResults")
+                    .path("results")
+                    .path("results")
+                    .path("contents")
+                    .get(0)
+                    .path("itemSectionRenderer")
+                    .path("contents")
+                    .get(0)
+                    .path("videoMetadataRenderer");
+
+            if (videoMetadata.isMissingNode()) {
+                Log.e(TAG, "Video metadata not found in response.");
+                return null;
+            }
+
+            String title = videoMetadata.path("title")
+                    .path("runs").get(0)
+                    .path("text").asText();
+
+            String description = videoMetadata.path("description")
+                    .path("runs").get(0)
+                    .path("text").asText();
+
+            JsonNode owner = videoMetadata.path("owner").path("videoOwnerRenderer");
+            String author = owner.path("title").path("simpleText").asText();
+
+            String browseId = owner.path("navigationEndpoint").path("browseEndpoint").path("browseId").asText();
+
+            JsonNode thumbnails = owner.path("thumbnail").path("thumbnails");
+            String profilePictureUrl = thumbnails.get(thumbnails.size() - 1).path("url").asText();
+
+            String subscriberCount = owner.path("subscriberCountText").path("simpleText").asText();
+
+            String publishedDate = videoMetadata.path("dateText")
+                    .path("simpleText").asText();
+
+            Log.d(TAG, "Extracted Video Details: Title=" + title + ", Author=" + author);
+
+            return new YouTubeResponse.VideoDetails(videoId, title, description, author, browseId, profilePictureUrl, subscriberCount, publishedDate);
+
+        } catch (Exception e) {
+            Log.e(TAG, "Error parsing video details JSON: " + e.getMessage(), e);
+            return null;
+        }
+    }
+
 
 }

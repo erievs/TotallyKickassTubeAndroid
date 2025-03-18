@@ -34,7 +34,7 @@ public class SearchActivity extends AppCompatActivity {
     private static final String BROWSE_SPORTS = "UCEgdi0XIXXZ-qJOFPf4JSKw";
     private static final String BROWSE_EDUCATION = "UCtFRv9O2AHqOZjjynzrv-xg";
     private static final String BROWSE_FASHION = "UCrpQ4p1Ql_hG8rKXIKM1MOQ";
-    //private static final String BROWSE_PODCASTS = "FEtopics_more&params=ugdbClkKDUZFdG9waWNzX21vcmUSDwoNRkV0b3BpY3NfbmV3cxIPCg1GRXRvcGljc19saXZlEhEKD0ZFdG9waWNzX3Nwb3J0cxITChFGRXRvcGljc19wb2RjYXN0cw%253D%253D";
+    private static final String BROWSE_SPOTLIGHT = "UCBR8-60-B28hp2BmDPdntcQ";
     private static final String BROWSE_GAMING = "FEtopics_gaming";
 
     @Override
@@ -87,6 +87,9 @@ public class SearchActivity extends AppCompatActivity {
                     browseId = BROWSE_FASHION;
                     break;
                 case 5:
+                    browseId = BROWSE_SPOTLIGHT;
+                    break;
+                case 6:
                     Intent settingsIntent = new Intent(SearchActivity.this, SettingsActivity.class);
                     startActivity(settingsIntent);
                     closeDrawer();
@@ -174,6 +177,12 @@ public class SearchActivity extends AppCompatActivity {
                 Log.e(TAG, "Error fetching search results: " + errorMessage);
                 Toast.makeText(SearchActivity.this, "Error fetching results. Please try again.", Toast.LENGTH_SHORT).show();
             }
+
+            @Override
+            public void onVideoDetailsFetched(YouTubeResponse.VideoDetails videoDetails) {
+
+            }
+
         });
 
         youTubeFetcher.fetchSearchResults(query);

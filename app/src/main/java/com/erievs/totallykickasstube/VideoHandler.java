@@ -164,7 +164,10 @@ public class VideoHandler {
         Log.d("VideoHandler", "Playing muxed video from URL: " + muxedUrl);
 
         DefaultHttpDataSource.Factory dataSourceFactory = new DefaultHttpDataSource.Factory()
-                .setUserAgent(Util.getUserAgent(context, "TotallyKickAssTube"));
+                .setUserAgent(Util.getUserAgent(context, "TotallyKickAssTube"))
+                .setConnectTimeoutMs(5000)
+                .setReadTimeoutMs(5000)
+                .setAllowCrossProtocolRedirects(true);
 
         ProgressiveMediaSource mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
                 .createMediaSource(MediaItem.fromUri(Uri.parse(muxedUrl)));
@@ -190,7 +193,11 @@ public class VideoHandler {
         }
 
         DefaultHttpDataSource.Factory dataSourceFactory = new DefaultHttpDataSource.Factory()
-                .setUserAgent(Util.getUserAgent(context, "TotallyKickAssTube"));
+                .setUserAgent(Util.getUserAgent(context, "TotallyKickAssTube"))
+                .setConnectTimeoutMs(5000)
+                .setReadTimeoutMs(5000)
+                .setAllowCrossProtocolRedirects(true);
+
 
         MediaItem videoItem = new MediaItem.Builder()
                 .setUri(Uri.parse(videoUrl))

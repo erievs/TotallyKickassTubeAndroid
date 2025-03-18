@@ -41,6 +41,30 @@ public class YouTubeResponse {
         }
     }
 
+    public static class VideoDetails {
+        public String videoId;
+        public String title;
+        public String description;
+        public String author;
+        public String channelId;
+        public String profilePictureUrl;
+        public String subscriberCount;
+        public String publishedDate;
+
+        public VideoDetails(String videoId, String title, String description, String author,
+                            String channelId, String profilePictureUrl, String subscriberCount, String publishedDate) {
+            this.videoId = videoId;
+            this.title = title;
+            this.description = description;
+            this.author = author;
+            this.channelId = channelId;
+            this.profilePictureUrl = profilePictureUrl;
+            this.subscriberCount = subscriberCount;
+            this.publishedDate = publishedDate;
+        }
+    }
+
+
     public static class Thumbnail {
         public List<ThumbnailItem> thumbnails;
 

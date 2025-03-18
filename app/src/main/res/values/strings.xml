@@ -1,5 +1,8 @@
 <resources>
+
     <string name="app_name">TotallyKickassTube</string>
+    <string name="app_version">Version 1.1.0a</string>
+
     <string name="navigation_drawer_open">Open Drawer</string>
     <string name="navigation_drawer_close">Close Drawer</string>
 
@@ -9,6 +12,7 @@
         <item>Sports</item>
         <item>Education</item>
         <item>Fashion</item>
+        <item>YouTube Spotlight</item>
         <item>Settings</item>
     </string-array>
 
@@ -18,6 +22,7 @@
         <item>@drawable/ic_baseline_sports_24</item>
         <item>@drawable/ic_baseline_education_24</item>
         <item>@drawable/ic_baseline_fashion_24</item>
+        <item>@drawable/ic_baseline_spotlight_24</item>
         <item>@drawable/ic_baseline_settings_24</item>
     </array>
 
